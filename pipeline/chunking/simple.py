@@ -8,9 +8,9 @@ from langchain_chroma import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.retrievers import BM25Retriever
 
-from ..embed import embed
+from ..util.embed import embed
 from ..common import embedding_function, embedding_dir, kiwi_tokenizer
-from ..kisti_data import get_sample_paper
+from ..util.kisti_data import get_sample_paper
 
 """Returns name for chroma collection for embeddings"""
 def get_simple_collection_name(chunk_size, chunk_overlap, with_metadata=False):

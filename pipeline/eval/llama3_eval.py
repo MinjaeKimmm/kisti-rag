@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 load_dotenv()
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-from .eval import input_file_path
+from ..common import input_path as input_file_path
 
 llm_output_file_path = 'results/llm_evaluation.json'
 

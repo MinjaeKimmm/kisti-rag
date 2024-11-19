@@ -3,3 +3,4 @@
 /embed
 /results
 *.json
+__pycache__

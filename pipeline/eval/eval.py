@@ -1,14 +1,11 @@
 import re
 import os
-import json, jsonlines
-from tqdm import tqdm
+import json
 import string
-from typing import Dict, Any
 from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
 from rouge_score import rouge_scorer
 from evaluate import load
-from nltk import ngrams
-from konlpy.tag import Okt
+from ..common import output_path as output_file_path
 
 # Ensure the output directory exists
 output_dir = os.path.dirname(output_file_path)
@@ -77,84 +74,14 @@ def calculate_rouge(reference, hypothesis):
     scores = scorer.score(reference, hypothesis)
     return scores
 
-def calculate_lcs(prediction, ground_truths):
-    def lcs_ratio(answer, pred):
-        answer_words = answer.split()
-        pred_words = pred.split()
-        n, m = len(answer_words), len(pred_words)
-        
-        dp = [[0] * (m + 1) for _ in range(n + 1)]
-        
-        max_length = 0
-        
-        for i in range(1, n + 1):
-            for j in range(1, m + 1):
-                if answer_words[i-1] == pred_words[j-1]:
-                    dp[i][j] = dp[i-1][j-1] + 1
-                    max_length = max(max_length, dp[i][j])
-        
-        return max_length / len(answer_words) if answer_words else 0
-
-    return max(lcs_ratio(gt, prediction) for gt in ground_truths)
-
-def calculate_ngram_overlap(prediction, ground_truths, n=5):
-    def ngram_overlap_ratio(answer, pred, n):
-        answer_words = answer.split()
-        pred_words = pred.split()
-        
-        if len(answer_words) == 0 or len(pred_words) == 0:
-            return 0
-        
-        n = min(n, len(answer_words), len(pred_words))
-        
-        answer_ngrams = set(ngrams(answer_words, n))
-        pred_ngrams = set(ngrams(pred_words, n))
-        overlap = answer_ngrams.intersection(pred_ngrams)
-        return len(overlap) / len(answer_ngrams) if answer_ngrams else 0
-
-    return max(ngram_overlap_ratio(gt, prediction, n) for gt in ground_truths)
-
-def calculate_jaccard_similarity(prediction, ground_truths):
-    def jaccard(list1, list2):
-        set1 = set(list1)
-        set2 = set(list2)
-        intersection = len(set1.intersection(set2))
-        return intersection / len(set2) if set2 else 0
-
-    def tokenize(text):
-        okt = Okt()
-        
-        def split_korean_non_korean(text):
-            return re.findall(r'[가-힣]+|[a-zA-Z0-9]+[a-zA-Z0-9Te]+|[^가-힣a-zA-Z0-9\s]+|\s+', text)
-        
-        parts = split_korean_non_korean(text)
-        
-        tokens = []
-        for part in parts:
-            if re.match(r'[가-힣]+', part):  
-                tokens.extend(okt.morphs(part))
-            elif re.match(r'[a-zA-Z0-9]+[a-zA-Z0-9Te]+', part): 
-                tokens.append(part)
-            elif part.strip(): 
-                tokens.append(part)
-        
-        return tokens
-
-    pred_tokens = tokenize(prediction)
-    return max(jaccard(pred_tokens, tokenize(gt)) for gt in ground_truths)
-
 def evaluate_by_dicts(input_path, output_path):
     metrics = [SquadAnswerEmF1Metric()]
      
     total_acc = 0
     total_lines = 0
-    total_bleu = 0
     total_rouge1 = 0
     total_rougel = 0
     total_bert = 0
-    total_lcs = 0
-    total_ngram_overlap = 0
-    total_jaccard = 0
 
     with open(input_path, 'r', encoding='utf-8') as file:
         for line in file:
@@ -182,15 +109,6 @@ def evaluate_by_dicts(input_path, output_path):
             acc = calculate_acc(normalized_prediction, normalized_ground_truth)
             total_acc += acc
 
-            lcs_score = calculate_lcs(normalized_prediction, normalized_ground_truth)
-            total_lcs += lcs_score
-
-            ngram_overlap_score = calculate_ngram_overlap(normalized_prediction, normalized_ground_truth, n=5)
-            total_ngram_overlap += ngram_overlap_score
-
-            jaccard_score = calculate_jaccard_similarity(normalized_prediction, normalized_ground_truth)
-            total_jaccard += jaccard_score
-
             # bleu_score = calculate_bleu(normalized_ground_truth, normalized_prediction)
             # total_bleu += bleu_score
 
@@ -207,9 +125,6 @@ def evaluate_by_dicts(input_path, output_path):
                 pass
             
         total_acc = total_acc / total_lines
-        total_lcs = total_lcs / total_lines
-        total_ngram = total_ngram_overlap / total_lines
-        total_jaccard = total_jaccard / total_lines
         # total_bleu = total_bleu / total_lines
         total_rouge1 = total_rouge1 / total_lines
         total_rougel = total_rougel / total_lines
@@ -217,9 +132,6 @@ def evaluate_by_dicts(input_path, output_path):
         
         evaluation_results = metrics[0].get_metric()
         evaluation_results['acc'] = total_acc
-        evaluation_results['lcs'] = total_lcs
-        evaluation_results['ngram'] = total_ngram
-        evaluation_results['jaccard'] = total_jaccard
         # evaluation_results['bleu'] = total_bleu
         evaluation_results['rouge1'] = total_rouge1
         evaluation_results['rougel'] = total_rougel
@@ -276,15 +188,6 @@ def recalculate_metrics(input_path, output_path):
 
             acc = calculate_acc(normalized_prediction, normalized_ground_truth)
             total_acc += acc
-
-            lcs_score = calculate_lcs(normalized_prediction, normalized_ground_truth)
-            total_lcs += lcs_score
-
-            ngram_overlap_score = calculate_ngram_overlap(normalized_prediction, normalized_ground_truth, n=5)
-            total_ngram_overlap += ngram_overlap_score
-
-            jaccard_score = calculate_jaccard_similarity(normalized_prediction, normalized_ground_truth)
-            total_jaccard += jaccard_score
 
             rouge_scores = calculate_rouge(" ".join(normalized_ground_truth), normalized_prediction)
             total_rouge1 += rouge_scores['rouge1'].fmeasure

@@ -1,16 +1,16 @@
 import json
+import random
 from tqdm import tqdm
 
 from ..common import remove_metadata
 from ..llm import format_prompt, generate, hyde_generate
 from .retriever import get_k_from_retriever
-from ..eval.eval import input_file_path, output_file_path, evaluate_by_dicts
+from ..eval.eval import evaluate_by_dicts
 from ..eval.llama3_eval import llm_output_file_path, RAG_eval_w_LLM
-from ..common import text_wrap
+from ..common import text_wrap, input_path as input_file_path, output_path as output_file_path
 from .retriever import get_k_from_retriever
 from ..util.kisti_data import get_sample_qa, get_question, get_answer
 from .reranking import get_retrieval_chain_w_rerank
-from .retriever import get_retrieval_chain
 from .hyde import format_hyde_prompt
 
 data = get_sample_qa()

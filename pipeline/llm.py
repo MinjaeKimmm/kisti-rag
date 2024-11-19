@@ -1,10 +1,7 @@
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-from .common import get_free_gpu, model_name
-
-free_gpu = get_free_gpu()
-device = torch.device(f'cuda:{free_gpu}')
+from .common import device, model_name
 
 model = AutoModelForCausalLM.from_pretrained(
     model_name,

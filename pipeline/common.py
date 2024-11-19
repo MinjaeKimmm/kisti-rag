@@ -8,17 +8,13 @@ from datetime import datetime
 # Third-party imports
 import numpy as np
 import torch
-from dotenv import load_dotenv
 from kiwipiepy import Kiwi
 from langchain_huggingface import HuggingFaceEmbeddings
 
-# Load environment variables
-load_dotenv()
-
 # Constants and configurations
 embedding_model = 'intfloat/multilingual-e5-large-instruct'
-embedding_dir = '/data3/temp/embed'
-log_dir = '/data3/temp/logs'
+embedding_dir = 'embed'
+log_dir = 'logs'
 model_name = 'Qwen/Qwen2-7B-Instruct'
 input_path = 'results/generated_answer.json'
 output_path = 'results/evaluation.json'

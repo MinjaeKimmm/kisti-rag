@@ -6,12 +6,23 @@ from pathlib import Path
 from tqdm import tqdm
 
 from langchain.docstore.document import Document
-from .common import preprocess_text
+from ..common import preprocess_text
 
 data_folder = 'data/KISTI'
 sample_folder = 'data/KISTI_sample'
 paper_folder_name = '(분류) 국내 논문 전문 텍스트 데이터셋'
 qa_folder_name = '(분류) 국내 논문 QA 데이터셋'
+
+def ensure_directories_exist():
+    """Create necessary directories if they don't exist"""
+    directories = [
+        os.path.join(data_folder, paper_folder_name),
+        os.path.join(data_folder, qa_folder_name),
+        os.path.join(sample_folder, paper_folder_name),
+        os.path.join(sample_folder, qa_folder_name)
+    ]
+    for directory in directories:
+        Path(directory).mkdir(parents=True, exist_ok=True)
 
 """Returns path and metadata for all files under the folder in list of dicts.
 
@@ -21,12 +32,23 @@ Dicts in {'path':..., 'metadata':{'journal':..., 'year':...}} format.
 def get_file_paths(folder_path):
     print('Getting File Paths...')
     files = []
+    
+    Path(folder_path).mkdir(parents=True, exist_ok=True)
+    
+    if not os.path.exists(folder_path) or not os.listdir(folder_path):
+        print(f"Warning: Directory {folder_path} is empty or doesn't exist")
+        return files
+        
     journals = sorted(os.listdir(folder_path))
     for journal in tqdm(journals):
         journal_path = os.path.join(folder_path, journal)
+        if not os.path.isdir(journal_path):
+            continue
         years = sorted(os.listdir(journal_path))
         for year in years:
             year_path = os.path.join(journal_path, year)
+            if not os.path.isdir(year_path):
+                continue
             papers = sorted(os.listdir(year_path))
             for paper in papers:
                 paper_path = os.path.join(year_path, paper)
@@ -182,6 +204,8 @@ def sample_kisti(sample_paper_num=3, sample_qa_num=3):
 
     for journal in tqdm(journals):
         sample_journal(journal)
+
+data = get_sample_qa()
 
 def get_question(i):
     """Get question of i-th entry in data."""
