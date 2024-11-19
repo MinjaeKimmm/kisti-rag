@@ -17,7 +17,8 @@ def remove_duplicate_docs(docs):
 
 def set_retriever_k(retriever, k):
     if isinstance(retriever, BM25Retriever):
-        retriever.k = k
+        retriever.__dict__['k'] = k
+        retriever.__dict__['_k'] = k  
     else:
         retriever.search_kwargs['k'] = k
 

@@ -88,4 +88,4 @@ def full_chain(retriever_type, hyde):
 if __name__ == '__main__':
     #create_sample_data(3,30)
     retrieval_chain(ENSEMBLE, True)
-    #full_chain(ENSEMBLE, False)
+    #full_chain(ENSEMBLE, True)
