@@ -44,10 +44,60 @@ def get_retrieval_chain(retriever, k, shuffle=False):
         return output
     return retrieval_chain
 
-# Evaluation metric functions
+# Evaluation metric function for eval_retriever
 def included_ratio(answer, docs):
     """Returns if answer is in one of the documents. 1 if true, 0 if false."""
     return int(any(answer in doc.page_content for doc in docs))
+
+def eval_retriever(retriever, k, num_of_tests=len(data), hyde=False, eval_logger=None, hyde_logger=None):
+    """Returns the evaluation of retriever alone, by the context it retrieves.
+    Basically the average of included_ratio function for the test cases.
+    Always simply picks the entries at front.
+    """
+    ratios = []
+    separator = "-" * 50
+
+    print('Evaluating...')
+    if eval_logger:
+        eval_logger.info(f"Starting evaluation: k={k}, num_of_tests={num_of_tests}, hyde={hyde}")
+        eval_logger.info(separator) 
+
+    if not hyde:
+        for i in tqdm(range(num_of_tests), bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}'):
+            context = get_k_from_retriever(retriever, k, get_question(i))
+            ans = get_answer(i)
+            ratio = included_ratio(ans, context)
+            ratios.append(ratio)
+
+            if eval_logger:
+                eval_logger.info(f"Question {i}: Ratio = {ratio}")
+                eval_logger.info(separator)
+
+    else:
+        for i in tqdm(range(num_of_tests), bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}'):
+            question = get_question(i)
+            formatted_prompt = format_hyde_prompt(question, chunk_size=500)
+            hyde_output = hyde_generate(formatted_prompt, chunk_size=500)
+            hyde_query = (question + '\n')*4 + hyde_output
+            if hyde_logger:
+                hyde_logger.info(f"Question {i}: {text_wrap(question)}")
+                hyde_logger.info(f"Hypothetical Document {i}: {text_wrap(hyde_output)}")
+                hyde_logger.info(f"Hyde Query {i}: {text_wrap(hyde_query)}")
+                hyde_logger.info(separator)
+
+            context = get_k_from_retriever(retriever, k, hyde_query)
+            ans = get_answer(i)
+            ratio = included_ratio(ans, context)
+            ratios.append(ratio)
+
+            if eval_logger:
+                eval_logger.info(f"Question {i}: Ratio = {ratio}")
+                eval_logger.info(separator)
+
+    final_ratio = sum(ratios)/num_of_tests
+    if eval_logger:
+        eval_logger.info(f"Evaluation complete. Final ratio: {final_ratio}")
+    return final_ratio
 
 # Main evaluation functions
 def eval_full_chain(retriever, k, num_of_tests=len(data), shuffle=False, rerank=False, verbose=False, 
@@ -112,53 +162,3 @@ def eval_full_chain(retriever, k, num_of_tests=len(data), shuffle=False, rerank=
         eval_logger.info(f"Evaluation complete. Final result: {evaluations}")
     
     return evaluations
-
-def eval_retriever(retriever, k, num_of_tests=len(data), hyde=False, eval_logger=None, hyde_logger=None):
-    """Returns the evaluation of retriever alone, by the context it retrieves.
-    Basically the average of included_ratio function for the test cases.
-    Always simply picks the entries at front.
-    """
-    ratios = []
-    separator = "-" * 50
-
-    print('Evaluating...')
-    if eval_logger:
-        eval_logger.info(f"Starting evaluation: k={k}, num_of_tests={num_of_tests}, hyde={hyde}")
-        eval_logger.info(separator) 
-
-    if not hyde:
-        for i in tqdm(range(num_of_tests), bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}'):
-            context = get_k_from_retriever(retriever, k, get_question(i))
-            ans = get_answer(i)
-            ratio = included_ratio(ans, context)
-            ratios.append(ratio)
-
-            if eval_logger:
-                eval_logger.info(f"Question {i}: Ratio = {ratio}")
-                eval_logger.info(separator)
-
-    else:
-        for i in tqdm(range(num_of_tests), bar_format='{l_bar}{bar:10}{r_bar}{bar:-10b}'):
-            question = get_question(i)
-            formatted_prompt = format_hyde_prompt(question, chunk_size=500)
-            hyde_output = hyde_generate(formatted_prompt, chunk_size=500)
-            hyde_query = (question + '\n')*4 + hyde_output
-            if hyde_logger:
-                hyde_logger.info(f"Question {i}: {text_wrap(question)}")
-                hyde_logger.info(f"Hypothetical Document {i}: {text_wrap(hyde_output)}")
-                hyde_logger.info(f"Hyde Query {i}: {text_wrap(hyde_query)}")
-                hyde_logger.info(separator)
-
-            context = get_k_from_retriever(retriever, k, hyde_query)
-            ans = get_answer(i)
-            ratio = included_ratio(ans, context)
-            ratios.append(ratio)
-
-            if eval_logger:
-                eval_logger.info(f"Question {i}: Ratio = {ratio}")
-                eval_logger.info(separator)
-
-    final_ratio = sum(ratios)/num_of_tests
-    if eval_logger:
-        eval_logger.info(f"Evaluation complete. Final ratio: {final_ratio}")
-    return final_ratio

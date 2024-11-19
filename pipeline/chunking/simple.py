@@ -58,7 +58,8 @@ def get_simple_retriever(type, chunk_size, chunk_overlap, with_metadata=False):
         if os.path.exists(cache_file):
             print('Loading cached BM25 Retriever')
             with open(cache_file, 'rb') as f:
-                return pickle.load(f)
+                retriever = pickle.load(f)
+                return retriever
 
         print('Creating new BM25 Retriever')
         documents = db.get()

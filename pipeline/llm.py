@@ -13,17 +13,17 @@ tokenizer = AutoTokenizer.from_pretrained(model_name)
 
 def format_prompt(query, retrieved_documents):
     PROMPT = f"""
-Based on the given reference documents, answer the following question.
-When answering, do not repeat the question, and only provide the correct answer in korean.
-Provide the answer only in JSON format as {{"Answer":"Your answer"}}.
-Answer should be Korean.
-Reference Documents:
----------------------
-{retrieved_documents}
-——————————
-Question: {query}
-Answer: Korean
-"""
+    Based on the given reference documents, answer the following question.
+    When answering, do not repeat the question, and only provide the correct answer in korean.
+    Provide the answer only in JSON format as {{"Answer":"Your answer"}}.
+    Answer should be Korean.
+    Reference Documents:
+    ---------------------
+    {retrieved_documents}
+    ——————————
+    Question: {query}
+    Answer: Korean
+    """
     return PROMPT
 
 def generate(formatted_prompt):
@@ -31,21 +31,24 @@ def generate(formatted_prompt):
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": formatted_prompt}  
     ]
-    input_ids = tokenizer.apply_chat_template(
+    inputs = tokenizer.apply_chat_template(
         messages,
         add_generation_prompt=True,
         return_tensors="pt"
     ).to(model.device)
+    
+    attention_mask = torch.ones_like(inputs).to(model.device)
+    
     generated_ids = model.generate(
-        input_ids,
+        inputs,
+        attention_mask=attention_mask,
         max_new_tokens=6000,
-        temperature = 1e-10,
+        temperature=1e-10
     )
     generated_ids = [
-        output_ids[len(input_ids):] for input_ids, output_ids in zip(input_ids, generated_ids)
+        output_ids[len(inputs):] for input_ids, output_ids in zip(inputs, generated_ids)
     ]
-    response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
-    return response
+    return tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
 def format_hyde_prompt(query, chunk_size):
     PROMPT = f"""Generate a section of a Korean academic paper that addresses the following question: '{query}'
@@ -65,13 +68,15 @@ def format_hyde_prompt(query, chunk_size):
     return PROMPT
 
 def hyde_generate(formatted_prompt, chunk_size):
-    input_ids = tokenizer(formatted_prompt, return_tensors="pt").input_ids.to(model.device)
+    inputs = tokenizer(formatted_prompt, return_tensors="pt").input_ids.to(model.device)
+    attention_mask = torch.ones_like(inputs).to(model.device)
+    
     with torch.no_grad():
         output_ids = model.generate(
-            input_ids,
-            max_new_tokens = chunk_size + 50,
-            temperature = 1e-10,
+            inputs,
+            attention_mask=attention_mask,
+            max_new_tokens=chunk_size + 50,
+            temperature=1e-10
         )
-    generated_ids = output_ids[0, input_ids.shape[1]:]
-    hypothetical_doc = tokenizer.decode(generated_ids, skip_special_tokens=True)
-    return hypothetical_doc
+    generated_ids = output_ids[0, inputs.shape[1]:]
+    return tokenizer.decode(generated_ids, skip_special_tokens=True)

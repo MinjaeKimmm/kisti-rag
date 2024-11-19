@@ -1,9 +1,10 @@
 import os
 import shutil
-
+import warnings
 from tqdm import tqdm
 import json
 
+from langchain._api import LangChainDeprecationWarning
 from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import CharacterTextSplitter
 from langchain.retrievers.parent_document_retriever import ParentDocumentRetriever
@@ -30,6 +31,7 @@ View chunking_parent.py file for more information.
 """
 def get_sentence_parent_retriever(parent_chunk_size, child_chunk_size):
     child_name = get_sentence_child_collection_name(parent_chunk_size, child_chunk_size)
+    warnings.filterwarnings('ignore', category=LangChainDeprecationWarning)
     vectorstore = Chroma(collection_name=child_name, embedding_function=embedding_function, persist_directory=embedding_dir)
     # https://stackoverflow.com/questions/77385587/persist-parentdocumentretriever-of-langchain
     fs = LocalFileStore(os.path.join(embedding_dir, get_sentence_parent_folder_name(parent_chunk_size, child_chunk_size)))

@@ -86,6 +86,6 @@ def full_chain(retriever_type, hyde):
         print(k, result)
 
 if __name__ == '__main__':
-    #create_sample_data(1,1)
-    #retrieval_chain(ENSEMBLE, False)
-    full_chain(ENSEMBLE, False)
+    #create_sample_data(3,30)
+    retrieval_chain(ENSEMBLE, True)
+    #full_chain(ENSEMBLE, False)
