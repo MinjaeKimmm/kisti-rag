@@ -1,6 +1,12 @@
-/data
-/logs
-/embed
-/results
+data/*
+logs/*
+embed/*
+results/*
 *.json
 __pycache__
+
+
+!data/.gitkeep
+!logs/.gitkeep
+!embed/.gitkeep
+!results/.gitkeep

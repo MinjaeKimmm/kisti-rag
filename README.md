@@ -69,7 +69,7 @@ The main script (`main.py`) serves as the entry point for running experiments an
 Example usage in main.py:
 ```python
 if __name__ == '__main__':
-    #create_sample_data(3,30)
+    #create_sample_data(30,3)
     #retrieval_chain(ENSEMBLE, True)
     full_chain(ENSEMBLE, False)
 ```
