@@ -21,10 +21,10 @@ from ..util.embed import remove_small_chunks, delete_embeddings
 
 """Returns name for chroma collection for child chunk embeddings"""
 def get_sentence_child_collection_name(parent_chunk_size, child_chunk_size):
-    return f'kisti-sentence-child-2-{parent_chunk_size}-{child_chunk_size}'
+    return f'kisti-sentence-child-{parent_chunk_size}-{child_chunk_size}'
 """Returns name for folder for parent documents"""
 def get_sentence_parent_folder_name(parent_chunk_size, child_chunk_size):
-    return f'kisti-sentence-parent-2-{parent_chunk_size}-{child_chunk_size}'
+    return f'kisti-sentence-parent-{parent_chunk_size}-{child_chunk_size}'
 
 """Returns langchain retriever with small-to-big method and embedding, splitting by sentences.
 View chunking_parent.py file for more information.

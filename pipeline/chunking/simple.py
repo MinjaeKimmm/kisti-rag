@@ -50,7 +50,7 @@ def get_simple_retriever(type, chunk_size, chunk_overlap, with_metadata=False):
     elif (type == 'bm25'):
         cache_dir = os.path.join(embedding_dir, 'bm25_cache')
         os.makedirs(cache_dir, exist_ok=True)
-        cache_file_name = f'simple_2_{chunk_size}_{chunk_overlap}'
+        cache_file_name = f'simple_{chunk_size}_{chunk_overlap}'
         if with_metadata:
             cache_file_name = f'{cache_file_name}_metadata'
         cache_file = os.path.join(cache_dir, f'{cache_file_name}.pkl')
