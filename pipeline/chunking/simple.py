@@ -14,7 +14,7 @@ from ..util.kisti_data import get_sample_paper
 
 """Returns name for chroma collection for embeddings"""
 def get_simple_collection_name(chunk_size, chunk_overlap, with_metadata=False):
-    text = f'kisti-2-{chunk_size}-{chunk_overlap}'
+    text = f'kisti-{chunk_size}-{chunk_overlap}'
     if with_metadata:
         text = f'{text}-metadata'
     return text
