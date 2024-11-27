@@ -44,7 +44,7 @@ There are two ways to run experiments:
 Execute the main script:
 
 ```bash
-python -m main
+python main.py
 ```
 
 The main script (`main.py`) provides three primary functions:
@@ -95,7 +95,7 @@ if __name__ == '__main__':
 For testing individual queries interactively:
 
 ```bash
-python -m interactive_rag [options]
+python interactive.py [options]
 ```
 
 Options:
