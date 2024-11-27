@@ -1,4 +1,10 @@
+import warnings
+warnings.simplefilter('ignore')  
+warnings.filterwarnings('always')  
+warnings.filterwarnings("ignore", message=".*attention mask.*", category=UserWarning)
+
 import torch
+import warnings
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 from .common import device, model_name
@@ -31,22 +37,23 @@ def generate(formatted_prompt):
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": formatted_prompt}  
     ]
-    inputs = tokenizer.apply_chat_template(
+    input_ids = tokenizer.apply_chat_template(
         messages,
         add_generation_prompt=True,
         return_tensors="pt"
     ).to(model.device)
     
-    attention_mask = torch.ones_like(inputs).to(model.device)
+    # Create attention mask (1s for all tokens)
+    attention_mask = torch.ones_like(input_ids)
     
     generated_ids = model.generate(
-        inputs,
+        input_ids,
         attention_mask=attention_mask,
         max_new_tokens=6000,
         temperature=1e-10
     )
     generated_ids = [
-        output_ids[len(inputs):] for input_ids, output_ids in zip(inputs, generated_ids)
+        output_ids[len(input_ids):] for input_ids, output_ids in zip(input_ids, generated_ids)
     ]
     return tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
