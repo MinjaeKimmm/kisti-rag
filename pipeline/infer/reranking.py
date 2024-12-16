@@ -13,7 +13,7 @@ def exp_normalize(x):
 def doc_reranker(query, docs):
     pairs = [[query, doc.page_content] for doc in docs]
     with torch.no_grad():
-        model = 'Dongjin-kr/ko-reranker'
+        model = 'BAAI/bge-reranker-base'
         tokenizer = AutoTokenizer.from_pretrained(model)
         model = AutoModelForSequenceClassification.from_pretrained(model)
         inputs = tokenizer(pairs, padding='max_length', truncation=False, return_tensors='pt', max_length=512)
